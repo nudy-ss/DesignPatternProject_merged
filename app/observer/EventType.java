@@ -1,0 +1,9 @@
+package observer;
+
+public enum EventType {
+  RESERVATION_CREATED,
+  RESERVATION_CANCELLED,
+  RESOURCE_ADDED,
+  ITEM_RENTED,
+  ITEM_RETURNED
+}
