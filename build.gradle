@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.slf4j:slf4j-simple:2.0.13'
+    implementation 'org.mongodb:mongodb-driver-sync:4.11.0'
+}
+sourceSets {
+    main {
+        java {
+            srcDirs = ['app']
+        }
+        resources {
+            srcDirs = ['app/resources']
+        }
+    }
+}

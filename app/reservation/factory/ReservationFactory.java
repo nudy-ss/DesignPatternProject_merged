@@ -1,5 +1,9 @@
 package reservation.factory;
 
+import Repository.RepositoryManager;
+import com.mongodb.client.MongoCollection;
+import entity.ReservationEntity;
+import entity.ResourceEntity;
 import manager.DepositManager;
 import reservation.Reservation;
 import reservation.ReservationManager;
@@ -12,16 +16,22 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static entity.db.DBConnection.codecRegistry;
+import static entity.db.DBConnection.database;
+
 public abstract class ReservationFactory {
 
   protected final ReservationManager manager;
   protected final DepositManager depositManager; // null 가능
+    protected RepositoryManager repositoryManager;
 
   private static final AtomicInteger SEQ = new AtomicInteger(1);
   private static final SimpleDateFormat ID_DF = new SimpleDateFormat("yyyyMMdd-HHmmss");
 
-  public ReservationFactory(ReservationManager manager) {
-    this(manager, null);
+  public ReservationFactory(ReservationManager manager,RepositoryManager repositoryManager) {
+    this.manager = manager;
+    this.depositManager = null;
+    this.repositoryManager = repositoryManager;
   }
 
   public ReservationFactory(ReservationManager manager, DepositManager depositManager) {
@@ -45,6 +55,18 @@ public abstract class ReservationFactory {
     applyPolicies(reservation);
     save(reservation);
     notifyObservers(reservation);
+
+      //몽고DB
+      repositoryManager.reservations.save(new ReservationEntity(
+              user,
+              resource,
+              start,
+              end,
+              slot,
+              "R-" + ID_DF.format(new Date())
+              + "-" + String.format("%03d", SEQ.getAndIncrement())
+      ));
+
 
     return reservation;
   }

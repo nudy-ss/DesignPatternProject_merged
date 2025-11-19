@@ -1,5 +1,6 @@
 package reservation.factory;
 
+import Repository.RepositoryManager;
 import reservation.LectureReservation;
 import reservation.Reservation;
 import reservation.ReservationManager;
@@ -12,8 +13,8 @@ import java.util.Date;
 
 public class LectureReservationFactory extends ReservationFactory {
 
-  public LectureReservationFactory(ReservationManager manager) {
-    super(manager);
+  public LectureReservationFactory(ReservationManager manager, RepositoryManager repositoryManager) {
+    super(manager,repositoryManager);
   }
 
   @Override

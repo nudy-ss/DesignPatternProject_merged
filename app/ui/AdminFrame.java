@@ -1,5 +1,7 @@
 package ui;
 
+import entity.ResourceEntity;
+import entity.db.DBConnection;
 import manager.ResourceType;
 import reservation.ReservationManager;
 import resource.RentableResource;
@@ -9,6 +11,8 @@ import manager.ResourceFileReader;
 
 import javax.swing.*;
 import java.awt.*;
+
+import static entity.db.DBConnection.codecRegistry;
 
 public class AdminFrame extends JFrame {
   private final ReservationManager manager;
@@ -55,7 +59,7 @@ public class AdminFrame extends JFrame {
     root.add(top, BorderLayout.NORTH);
     root.add(scroll, BorderLayout.CENTER);
     setContentPane(root);
-
+    /*
     var loadBtn = new JButton("파일에서 불러오기");
     top.add(loadBtn, BorderLayout.EAST);
     loadBtn.addActionListener(e -> {
@@ -74,10 +78,9 @@ public class AdminFrame extends JFrame {
 
       JOptionPane.showMessageDialog(this, count + "개의 자원을 불러왔습니다!");
     });
+*/
 
-
-
-    // ✅ 이벤트 등록
+      // ✅ 이벤트 등록
     addBtn.addActionListener(e -> {
       String type = (String) typeBox.getSelectedItem();
       String name = nameField.getText().trim();
@@ -97,6 +100,7 @@ public class AdminFrame extends JFrame {
       }
 
       // ✅ 팩토리 + 파일 저장 + 중복 체크 적용 부분
+        //무조건 true로 만들어 놓음 지금
       boolean ok = admin.registerResource(manager, ResourceType.valueOf(type), name, deposit);
 
       if (!ok) {
