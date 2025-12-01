@@ -8,7 +8,7 @@ import user.User;
 import javax.swing.*;
 import java.awt.*;
 
-public class LoginFrame extends JFrame {
+/*public class LoginFrame extends JFrame {
   private final ReservationManager manager;
   private final RoleService roleService = new RoleService();
 
@@ -50,3 +50,4 @@ public class LoginFrame extends JFrame {
     });
   }
 }
+*/

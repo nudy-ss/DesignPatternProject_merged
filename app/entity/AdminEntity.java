@@ -1,14 +1,14 @@
 package entity;
 
-import manager.ResourceFileWriter;
 import manager.ResourceType;
 import org.bson.types.ObjectId;
 import reservation.ReservationManager;
-//사용 X
+import resource.SimpleItem;
+import resource.SimpleLectureRoom;
+
 public class AdminEntity extends UserEntity {
 
     private ObjectId id;
-
     private String adminId;
 
     public AdminEntity() {}
@@ -30,24 +30,35 @@ public class AdminEntity extends UserEntity {
         this.adminId = adminId;
     }
 
-    // 문자열 버전
+    // ====================================================
+    // 문자열 버전 registerResource
+    // ====================================================
     public void registerResource(ReservationManager manager, String type, String name, int deposit) {
-        manager.registerResource(type, name, deposit);
+        ResourceType t = ResourceType.valueOf(type.toUpperCase());
+
+        switch (t) {
+            case LECTURE -> manager.addResource(new SimpleLectureRoom(name, deposit));
+            case ITEM -> manager.addResource(new SimpleItem(name, deposit));
+        }
     }
 
-    // enum 버전
+    // ====================================================
+    // enum 버전 registerResource
+    // ====================================================
     public boolean registerResource(ReservationManager manager, ResourceType type, String name, int deposit) {
 
+        switch (type) {
+            case LECTURE -> {
+                manager.addResource(new SimpleLectureRoom(name, deposit));
+                return true;
+            }
+            case ITEM -> {
+                manager.addResource(new SimpleItem(name, deposit));
+                return true;
+            }
+        }
 
-//        boolean saved = ResourceFileWriter.appendResource(type.name(), name, deposit);
-//        if (!saved) {
-//            System.out.println("[실패] 동일한 이름의 자원이 이미 존재합니다: " + name);
-//            return false;
-//        }
-
-//        manager.registerResource(type.name(), name, deposit);
-//        System.out.println("[성공] 자원 등록 및 파일 저장 완료!");
-        return true;
+        return false;
     }
 
     public void deleteResource(resource.Resource resource) {}

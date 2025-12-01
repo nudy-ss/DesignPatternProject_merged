@@ -1,6 +1,7 @@
 package manager;
 
 import reservation.ReservationManager;
+import ui.Main.LoginPanel;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,13 +46,30 @@ public class ResourceBatchLoader {
 
         // 문자열 오버로드 그대로 활용 (내부에서 enum 변환)
         try {
-          manager.registerResource(typeStr, name, deposit);
-          System.out.printf("[OK] %d행 등록: %s, %s, %d%n", lineNo, typeStr, name, deposit);
+
+          ResourceType type = ResourceType.valueOf(typeStr.toUpperCase());
+
+          // 관리자 등록 메서드 호출
+          LoginPanel.currentAdmin.registerResource(
+              manager,
+              type,
+              name,
+              deposit
+          );
+
+          System.out.printf("[OK] %d행 등록: %s, %s, %d%n",
+              lineNo, typeStr, name, deposit);
+
         } catch (IllegalArgumentException e) {
-          System.out.printf("[경고] %d행 TYPE 오류: %s (LECTURE/ITEM만 허용)%n", lineNo, typeStr);
+          // typeStr이 LECTURE/ITEM이 아닐 때
+          System.out.printf("[경고] %d행 TYPE 오류: %s (LECTURE/ITEM만 허용)%n",
+              lineNo, typeStr);
+
         } catch (Exception e) {
-          System.out.printf("[오류] %d행 처리 실패: %s%n", lineNo, e.getMessage());
+          System.out.printf("[오류] %d행 처리 실패: %s%n",
+              lineNo, e.getMessage());
         }
+
       }
     }
   }

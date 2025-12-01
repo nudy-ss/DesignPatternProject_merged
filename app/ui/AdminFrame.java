@@ -13,7 +13,7 @@ import javax.swing.*;
 import java.awt.*;
 
 import static entity.db.DBConnection.codecRegistry;
-
+/*
 public class AdminFrame extends JFrame {
   private final ReservationManager manager;
   private final Admin admin;
@@ -80,7 +80,7 @@ public class AdminFrame extends JFrame {
     });
 */
 
-      // ✅ 이벤트 등록
+ /*     // ✅ 이벤트 등록
     addBtn.addActionListener(e -> {
       String type = (String) typeBox.getSelectedItem();
       String name = nameField.getText().trim();
@@ -127,3 +127,4 @@ public class AdminFrame extends JFrame {
     });
   }
 }
+*/

@@ -5,7 +5,7 @@ import user.User;
 
 public class SimpleLectureRoom implements ReservableResource {
   private final String name;
-  private final int deposit;
+  private int deposit;
   private boolean available = true;
 
   public SimpleLectureRoom(String name, int deposit) {
@@ -19,5 +19,13 @@ public class SimpleLectureRoom implements ReservableResource {
 
   @Override public String getName() { return name; }
   @Override public int getDeposit() { return deposit; }
+  @Override
+  public void setDeposit(int deposit) {
+    this.deposit = deposit;
+  }
   @Override public boolean isAvailable() { return available; }
+  public void setAvailable(boolean available) {
+    this.available = available;
+  }
+
 }

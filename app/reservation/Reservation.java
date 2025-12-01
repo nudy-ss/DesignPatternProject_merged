@@ -59,6 +59,8 @@ public class Reservation {
   public boolean isReturned() { return isReturned; }
   public void markReturned() { this.isReturned = true; }
 
+  public String getEventName() { return eventName; }
+  public void setEventName(String eventName) { this.eventName = eventName; }
   public String getDetails() {
     return "[예약] ID=" + reservationId +
         ", 자원=" + resource.getName() +

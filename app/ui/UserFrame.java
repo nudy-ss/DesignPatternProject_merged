@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class UserFrame extends JFrame {
+/*public class UserFrame extends JFrame {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
@@ -304,3 +304,4 @@ public class UserFrame extends JFrame {
         }
     }
 }
+*/

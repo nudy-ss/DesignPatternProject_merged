@@ -116,8 +116,9 @@ public abstract class ReservationFactory {
    * 저장
    */
   protected void save(Reservation r) {
-    manager.addReservation(r);
+    manager.getReservations().add(r);
   }
+
 
   /**
    * 옵저버 알림
