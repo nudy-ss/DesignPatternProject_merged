@@ -29,11 +29,14 @@ public class Admin extends User {
     RepositoryManager repositoryManager = RepositoryManager.getInstance();
 
     switch (type) {
+
       case LECTURE:
         if (repositoryManager.lectures.findByName(name) != null) {
           return false;
         }
+
         repositoryManager.lectures.save(new LectureEntity(name, deposit, true));
+
         manager.addResource(new SimpleLectureRoom(name, deposit));
         return true;
 
@@ -41,13 +44,15 @@ public class Admin extends User {
         if (repositoryManager.resources.findByName(name) != null) {
           return false;
         }
+
         repositoryManager.resources.save(new ResourceEntity(name, deposit));
+
         manager.addResource(new SimpleItem(name, deposit));
         return true;
     }
-
     return false;
   }
+
 
 
 

@@ -1,5 +1,8 @@
 package ui.Main;
 
+import Repository.RepositoryManager;
+import entity.AdminEntity;
+import entity.UserEntity;
 import ui.Main.MainFrame;
 import reservation.ReservationManager;
 
@@ -10,7 +13,7 @@ public class LoginPanel extends JPanel {
 
   public static String currentUserId;
   public static String currentUserName;
-  public static user.Admin currentAdmin;
+  public static user.Admin currentAdmin;  // 기존 구조 유지
 
   public LoginPanel(MainFrame frame, ReservationManager manager) {
 
@@ -31,6 +34,7 @@ public class LoginPanel extends JPanel {
     JButton loginBtn = new JButton("로그인");
     loginBtn.setFont(new Font("Dialog", Font.BOLD, 16));
 
+    // UI 배치
     c.gridx = 0; c.gridy = 0; c.gridwidth = 2;
     add(title, c);
 
@@ -49,8 +53,11 @@ public class LoginPanel extends JPanel {
     c.gridx = 0; c.gridy = 3; c.gridwidth = 2;
     add(loginBtn, c);
 
-    // 로그인 버튼 기능
+    // ===========================
+    // 🔥 로그인 버튼(DB 연동 버전)
+    // ===========================
     loginBtn.addActionListener(e -> {
+
       String id = idField.getText().trim();
       String name = nameField.getText().trim();
 
@@ -59,16 +66,46 @@ public class LoginPanel extends JPanel {
         return;
       }
 
+      RepositoryManager repo = RepositoryManager.getInstance();
+
+      // 🔥 1. 관리자 DB 체크
+      if (id.equals("99999999")) {
+        currentAdmin = new user.Admin(id, name, id);  // 이름 무시하고 관리자
+        currentUserId = id;
+        currentUserName = name;
+
+        System.out.println("[LOGIN] 관리자 강제 로그인 (99999999)");
+        frame.showPanel("ADMIN");
+        return;
+      }
+      AdminEntity admin = repo.admins.findByField("studentId", id);
+      if (admin != null) {
+        // DB에 존재하는 관리자
+        currentAdmin = new user.Admin(admin.getStudentId(), admin.getName(), admin.getAdminId());
+        currentUserId = admin.getStudentId();
+        currentUserName = admin.getName();
+
+        System.out.println("[LOGIN] 관리자 DB 로그인");
+        frame.showPanel("ADMIN");
+        return;
+      }
+
+      // 🔥 2. 사용자 DB 체크
+      UserEntity user = repo.users.findByField("studentId", id);
+
+      if (user == null) {
+        // 🔥 3) 일반 사용자 자동 생성
+        user = new UserEntity(id, name);
+        repo.users.save(user);
+
+        System.out.println("[DB] 새로운 사용자 생성됨 → " + id);
+      }
+
+      // 메모리 로그인 정보 업데이트
       currentUserId = id;
       currentUserName = name;
 
-      // 관리자 로그인
-      if (id.equals("99999999")) {
-        currentAdmin = new user.Admin(id, name, id);
-        frame.showPanel("ADMIN");
-      } else {
-        frame.showPanel("MENU");
-      }
+      frame.showPanel("MENU");
     });
   }
 }

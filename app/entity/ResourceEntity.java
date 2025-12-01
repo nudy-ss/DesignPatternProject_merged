@@ -7,6 +7,13 @@ public class ResourceEntity {
     private String name;
     private int deposit;
     private boolean inStock;
+    private String type;
+
+    private int rentalPeriod;
+
+    public int getRentalPeriod() { return rentalPeriod; }
+    public void setRentalPeriod(int rentalPeriod) { this.rentalPeriod = rentalPeriod; }
+
 
     public ResourceEntity() {}
 
@@ -25,4 +32,6 @@ public class ResourceEntity {
 
     public boolean isInStock() { return inStock; }
     public void setInStock(boolean inStock) { this.inStock = inStock; }
+
+
 }

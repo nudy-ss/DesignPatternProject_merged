@@ -10,9 +10,11 @@ public interface RentableResource extends Resource {
 
   boolean checkStock();
 
-  String getRentalPeriod();
+  int getRentalPeriod();
+
+  void setRentalPeriod(int period);
+  void returnItem(User user);
 
   void setRentalPeriod(String period);
-  void returnItem(User user);
 }
 

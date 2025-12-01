@@ -12,37 +12,31 @@ public class AdminAddPanel extends JPanel {
 
   public AdminAddPanel(MainFrame frame, ReservationManager manager) {
 
-    setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-    setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+    setLayout(new GridLayout(6,1,10,10));
+    setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
 
-    JLabel title = new JLabel("[자원 등록]");
-    title.setFont(new Font("Dialog", Font.BOLD, 20));
-    title.setAlignmentX(CENTER_ALIGNMENT);
-
-    add(title);
-    add(Box.createVerticalStrut(15));
+    add(new JLabel("[자원 등록]", SwingConstants.CENTER));
 
     JComboBox<String> typeBox = new JComboBox<>(new String[]{"LECTURE", "ITEM"});
-    JTextField nameField = new JTextField(15);
-    JTextField depositField = new JTextField(15);
-
-    add(makeRow("타입 선택:", typeBox));
-    add(makeRow("자원 이름:", nameField));
-    add(makeRow("보증금:", depositField));
-    add(Box.createVerticalStrut(15));
-
-    JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
+    JTextField nameField = new JTextField();
+    JTextField depositField = new JTextField();
     JButton addBtn = new JButton("등록하기");
     JButton backBtn = new JButton("뒤로");
-    addBtn.setPreferredSize(new Dimension(120, 35));
-    backBtn.setPreferredSize(new Dimension(120, 35));
 
-    btnRow.add(addBtn);
-    btnRow.add(backBtn);
-    add(btnRow);
+    add(new JLabel("타입 선택:"));
+    add(typeBox);
+    add(new JLabel("자원 이름:"));
+    add(nameField);
+    add(new JLabel("보증금:"));
+    add(depositField);
+    add(addBtn);
+    add(backBtn);
 
-    // 등록 버튼
+    // ===========================
+    // 🔥 자원 등록 버튼 (DB 저장)
+    // ===========================
     addBtn.addActionListener(e -> {
+
       String type = (String) typeBox.getSelectedItem();
       String name = nameField.getText().trim();
       String dep = depositField.getText().trim();
@@ -53,12 +47,14 @@ public class AdminAddPanel extends JPanel {
       }
 
       int deposit;
-      try { deposit = Integer.parseInt(dep); }
-      catch (Exception ex) {
+      try {
+        deposit = Integer.parseInt(dep);
+      } catch (Exception ex) {
         JOptionPane.showMessageDialog(frame, "보증금은 숫자로 입력하세요.");
         return;
       }
 
+      // 🔥 핵심: DB 기반 Admin 사용!
       boolean ok = LoginPanel.currentAdmin.registerResource(
           manager,
           ResourceType.valueOf(type),
@@ -66,24 +62,15 @@ public class AdminAddPanel extends JPanel {
           deposit
       );
 
-      if (!ok) JOptionPane.showMessageDialog(frame, "이미 존재하는 자원입니다.");
-      else {
-        JOptionPane.showMessageDialog(frame, "등록 성공!");
+      if (!ok) {
+        JOptionPane.showMessageDialog(frame, "이미 존재하는 자원입니다.");
+      } else {
+        JOptionPane.showMessageDialog(frame, "DB 저장 + 메모리 등록 성공!");
         nameField.setText("");
         depositField.setText("");
       }
     });
 
-    // 뒤로가기
     backBtn.addActionListener(e -> frame.showPanel("ADMIN"));
-  }
-
-  /** 레이블 + 입력칸을 나란히 배치하는 UI 헬퍼 */
-  private JPanel makeRow(String label, JComponent comp) {
-    JPanel row = new JPanel(new BorderLayout(10, 10));
-    row.add(new JLabel(label), BorderLayout.WEST);
-    row.add(comp, BorderLayout.CENTER);
-    row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-    return row;
   }
 }

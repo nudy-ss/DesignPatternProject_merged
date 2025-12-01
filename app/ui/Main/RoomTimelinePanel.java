@@ -1,19 +1,19 @@
 package ui.Main;
 
+import Repository.RepositoryManager;
+import entity.ReservationEntity;
 import reservation.ReservationManager;
-import reservation.Reservation;
-import resource.ReservableResource;
-import resource.TimeSlot;
 
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 
 public class RoomTimelinePanel extends JPanel {
 
-  private String[] timeSlots = {"09:00-11:00", "11:00-13:00", "13:00-15:00"}; // ← 네 TimeSlot 형식
+  private final String[] timeSlots = {"09:00-11:00", "11:00-13:00", "13:00-15:00"};
 
   public RoomTimelinePanel(MainFrame frame, ReservationManager manager) {
 
@@ -25,41 +25,49 @@ public class RoomTimelinePanel extends JPanel {
     JTable table = new JTable(3, 7);
     table.setRowHeight(40);
 
+    add(new JScrollPane(table), BorderLayout.CENTER);
+
     JButton backBtn = new JButton("뒤로");
     add(backBtn, BorderLayout.SOUTH);
 
-    add(new JScrollPane(table), BorderLayout.CENTER);
 
-    // 화면이 열릴 때 데이터 로드
+    // ============================================
+    //   화면 열릴 때 데이터 로드
+    // ============================================
     addComponentListener(new java.awt.event.ComponentAdapter() {
       public void componentShown(java.awt.event.ComponentEvent evt) {
 
-        LocalDate start = ReserveRoomPanel.selectedDate;
-        int roomIdx = ReserveRoomPanel.selectedRoomIndex;
-        ReservableResource room = manager.getReservables().get(roomIdx);
+        RepositoryManager repo = RepositoryManager.getInstance();
+        String roomName = ReserveRoomPanel.selectedRoomName;
+        LocalDate startDate = ReserveRoomPanel.selectedDate;
 
-        // 날짜 헤더 채우기
+        // 날짜 헤더
         for (int col = 0; col < 7; col++) {
-          LocalDate d = start.plusDays(col);
+          LocalDate d = startDate.plusDays(col);
           table.getColumnModel().getColumn(col).setHeaderValue(d.toString());
         }
 
-        // 예약 여부 채우기
+        // DB 전체 예약
+        List<ReservationEntity> reservations = repo.reservations.findAll();
+
+        // 표 채우기
         for (int row = 0; row < 3; row++) {
           for (int col = 0; col < 7; col++) {
 
-            LocalDate d = start.plusDays(col);
+            LocalDate ld = startDate.plusDays(col);
+            Date date = Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            String slot = timeSlots[row];
 
-            // LocalDate → Date
-            Date realDate = Date.from(d.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            // DB에서 예약된 칸 찾기
+            boolean reserved = reservations.stream()
+                .anyMatch(r ->
+                    r.getResourceType().equals("LECTURE") &&
+                        r.getResourceName().equals(roomName) &&
+                        sameDate(r.getStartDate(), date) &&
+                        slot.equals(r.getTimeSlot())
+                );
 
-            // 시간대 String → TimeSlot
-            String slotText = timeSlots[row];
-            TimeSlot realSlot = new TimeSlot(slotText);
-
-            Reservation r = manager.findReservation(room, realDate, realSlot);
-
-            table.setValueAt(r == null ? "□" : "■", row, col);
+            table.setValueAt(reserved ? "■" : "□", row, col);
           }
         }
 
@@ -67,34 +75,53 @@ public class RoomTimelinePanel extends JPanel {
       }
     });
 
-    // 클릭 이벤트
+
+    // ============================================
+    //   칸 클릭 이벤트
+    // ============================================
     table.addMouseListener(new java.awt.event.MouseAdapter() {
-      public void mouseClicked(java.awt.event.MouseEvent e) {
+      public void mouseClicked(java.awt.event.MouseEvent evt) {
+
         int row = table.getSelectedRow();
         int col = table.getSelectedColumn();
+        if (row < 0 || col < 0) return;
 
-        LocalDate date = ReserveRoomPanel.selectedDate.plusDays(col);
+        RepositoryManager repo = RepositoryManager.getInstance();
+        String roomName = ReserveRoomPanel.selectedRoomName;
+
+        LocalDate ld = ReserveRoomPanel.selectedDate.plusDays(col);
+        Date date = Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
         String slot = timeSlots[row];
 
-        int roomIdx = ReserveRoomPanel.selectedRoomIndex;
-        ReservableResource room = manager.getReservables().get(roomIdx);
+        // DB에서 예약 검색
+        ReservationEntity found =
+            repo.reservations.findAll().stream()
+                .filter(r -> r.getResourceType().equals("LECTURE"))
+                .filter(r -> r.getResourceName().equals(roomName))
+                .filter(r -> sameDate(r.getStartDate(), date))
+                .filter(r -> slot.equals(r.getTimeSlot()))
+                .findFirst()
+                .orElse(null);
 
-        // detail/reserve로 넘길 때는 LocalDate + String 그대로 넘기고
-        // 내부에서 ReservationPopup에서 Date/TimeSlot으로 변환 처리함
-        Reservation r = manager.findReservation(
-            room,
-            Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant()),
-            new TimeSlot(slot)
-        );
-
-        if (r == null) {
-          ReservationPopup.reserve(frame, manager, room, date, slot);
+        if (found == null) {
+          // 빈 칸 → 예약 새로 만들기
+          ReservationPopup.reserve(frame, roomName, ld, slot);
         } else {
-          ReservationPopup.detail(frame, r);
+          // 이미 예약 → 상세 팝업
+          ReservationPopup.detail(frame, found);
         }
       }
     });
 
     backBtn.addActionListener(e -> frame.showPanel("RESERVE_ROOM"));
+  }
+
+
+  // =======================
+  // 날짜 비교 유틸
+  // =======================
+  private boolean sameDate(Date a, Date b) {
+    return a.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+        .equals(b.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
   }
 }

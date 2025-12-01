@@ -25,12 +25,17 @@ public class SimpleItem implements RentableResource {
   @Override public void returnItem(User user) {}
   @Override public boolean checkStock() { return inStock; }
 
-  private String rentalPeriod = "3일"; // 기본값
+  private int rentalPeriod;
   @Override
-  public String getRentalPeriod() { return rentalPeriod; }
+  public int getRentalPeriod() { return rentalPeriod; }
 
   @Override
-  public void setRentalPeriod(String period) { this.rentalPeriod = period; }
+  public void setRentalPeriod(int period) {
+    this.rentalPeriod = period;
+  }
+
+  @Override
+  public void setRentalPeriod(String period) { this.rentalPeriod = Integer.parseInt(period); }
 
 
   @Override public String getName() { return name; }

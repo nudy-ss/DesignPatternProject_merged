@@ -2,7 +2,11 @@ package ui.Main.admin;
 
 import ui.Main.MainFrame;
 import reservation.ReservationManager;
+import Repository.RepositoryManager;
+import entity.LectureEntity;
+import entity.ResourceEntity;
 import resource.RentableResource;
+import resource.ReservableResource;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,32 +39,67 @@ public class AdminEditPanel extends JPanel {
 
     add(bottom, BorderLayout.SOUTH);
 
+    // 화면 입장 → 리스트 새로 로딩
     addComponentListener(new java.awt.event.ComponentAdapter() {
       public void componentShown(java.awt.event.ComponentEvent evt) {
+
         model.clear();
-        manager.getAllResources().forEach(r ->
-            model.addElement("%s (%s) | 보증금 %d"
-                .formatted(r.getName(), r.getClass().getSimpleName(), r.getDeposit()))
-        );
+        manager.getAllResources().forEach(r -> {
+          model.addElement(
+              "%s (%s) | 보증금 %d".formatted(
+                  r.getName(),
+                  r.getClass().getSimpleName(),
+                  r.getDeposit()
+              )
+          );
+        });
       }
     });
 
     saveBtn.addActionListener(e -> {
+
       int idx = list.getSelectedIndex();
       if (idx < 0) return;
 
       var res = manager.getAllResources().get(idx);
 
       try {
-        int dep = Integer.parseInt(depositField.getText().trim());
-        res.setDeposit(dep);   // 정상
 
-        if (res instanceof RentableResource rental) {
-          int days = Integer.parseInt(rentalDaysField.getText().trim());
-          rental.setRentalPeriod(days + "일");   // ← 여기로 수정!!!
+        int dep = Integer.parseInt(depositField.getText().trim());
+        res.setDeposit(dep);
+
+        RepositoryManager repo = RepositoryManager.getInstance();
+
+        // ===========================
+        // 🔥 강의실 (ReservableResource)
+        // ===========================
+        if (res instanceof ReservableResource) {
+
+          LectureEntity le = repo.lectures.findByName(res.getName());
+          if (le != null) {
+            le.setDeposit(dep);
+            repo.lectures.update(le);   // DB에 저장
+          }
         }
 
-        JOptionPane.showMessageDialog(frame, "수정 완료!");
+        // ===========================
+        // 🔥 물품 (RentableResource)
+        // ===========================
+        if (res instanceof RentableResource rental) {
+
+          int period = Integer.parseInt(rentalDaysField.getText().trim());
+          rental.setRentalPeriod(period);     // int 사용, 이름만 변경
+
+          ResourceEntity re = repo.resources.findByName(res.getName());
+          if (re != null) {
+            re.setDeposit(dep);
+            re.setRentalPeriod(period);     // DB도 같은 이름
+            repo.resources.update(re);
+          }
+        }
+
+        JOptionPane.showMessageDialog(frame, "DB 저장 + UI 수정 완료!");
+
       } catch (Exception ex) {
         JOptionPane.showMessageDialog(frame, "값을 다시 확인하세요.");
       }

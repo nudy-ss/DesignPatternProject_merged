@@ -1,15 +1,16 @@
 package ui.Main;
 
+import Repository.RepositoryManager;
+import entity.ReservationEntity;
+import entity.ResourceEntity;
 import reservation.ReservationManager;
-import resource.RentableResource;
-import ui.Main.LoginPanel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class RentItemPanel extends JPanel {
 
@@ -22,14 +23,18 @@ public class RentItemPanel extends JPanel {
     setLayout(new BorderLayout());
 
     // =========================
-    // 1) 물품 목록
+    // 1) DB에서 물품 목록 불러오기
     // =========================
+    RepositoryManager repo = RepositoryManager.getInstance();
+    List<ResourceEntity> items =
+        repo.resources.findByType("ITEM");   // DB 기반
+
     DefaultListModel<String> model = new DefaultListModel<>();
     JList<String> list = new JList<>(model);
 
-    for (RentableResource r : manager.getRentables()) {
+    for (ResourceEntity r : items) {
       model.addElement(
-          "%s (대여기간 %s, 보증금 %d원)"
+          "%s (대여기간 %d일, 보증금 %d원)"
               .formatted(r.getName(), r.getRentalPeriod(), r.getDeposit())
       );
     }
@@ -72,40 +77,40 @@ public class RentItemPanel extends JPanel {
         return;
       }
 
-      RentableResource item = manager.getRentables().get(idx);
+      ResourceEntity item = items.get(idx);
 
       // 날짜 + 시간 조합
-      String dateText = dateField.getText().trim();
-      String timeText = timeField.getText().trim();
-
       Date start;
       try {
-        start = DATETIME.parse(dateText + " " + timeText);
+        start = DATETIME.parse(dateField.getText().trim() + " " + timeField.getText().trim());
       } catch (Exception ex) {
         JOptionPane.showMessageDialog(frame, "날짜/시간 형식이 올바르지 않습니다.");
         return;
       }
 
-      // 대여기간 (예: "3일") -> 숫자만 추출
-      String periodStr = item.getRentalPeriod();  // "3일"
-      int days = extractDays(periodStr);
-
-      // start + days 계산
+      // 반납 예정일 = start + rentalDays
       Calendar cal = Calendar.getInstance();
       cal.setTime(start);
-      cal.add(Calendar.DATE, days);
+      cal.add(Calendar.DATE, item.getRentalPeriod());
       Date expectedReturn = cal.getTime();
 
-      // 실제 예약 생성
-      manager.createItemReservation(
+      // ===============================
+      // 🔥 DB에 ReservationEntity 저장
+      // ===============================
+      ReservationEntity r = new ReservationEntity(
           LoginPanel.currentUserId,
           LoginPanel.currentUserName,
-          item,
+          item.getName(),
+          "ITEM",
           start,
-          expectedReturn
+          expectedReturn,
+          null,
+          null  // 물품은 행사명 없음
       );
 
-      // 팝업으로 정보 표시
+      repo.reservations.save(r);
+
+      // 팝업 표시
       JOptionPane.showMessageDialog(frame,
           """
           [대여 완료]
@@ -119,25 +124,15 @@ public class RentItemPanel extends JPanel {
                   DATETIME.format(start),
                   DATETIME.format(expectedReturn),
                   item.getDeposit()
-              ));
+              )
+      );
 
       frame.showPanel("MENU");
     });
-
 
     // =========================
     // 4) 뒤로가기
     // =========================
     backBtn.addActionListener(e -> frame.showPanel("MENU"));
-  }
-
-
-  // "3일" → 3 숫자 추출
-  private int extractDays(String period) {
-    try {
-      return Integer.parseInt(period.replaceAll("[^0-9]", ""));
-    } catch (Exception e) {
-      return 1;
-    }
   }
 }
